@@ -15,15 +15,6 @@ Two different test algorithms are provided:
 * **Checkerboard**: Fills RAM with alternating bit pattern 01010101 (0x55), then reads back and verifies the values read match the pattern. Repeats for the pattern 10101010 (0xAA).
 * **March C**: The entire RAM is alternately checked and filled byte-by-byte with background patterns (value 00000000, 0x00) and inverse background patterns (11111111, 0xFF) in seven loops. The loops are performed in either ascending or descending address order, as dictated by the stage of the algorithm. The read/write loops, and their order, are: write 0, desc.; read 0, write 1, asc.; read 1, write 0, asc.; read 0, desc.; read 0, write 1, desc.; read 1, write 0, desc.; read 0, asc. In this manner, set bits are 'marched' across the RAM area.
 
-The corresponding functions are:
-
-* `unsigned char ram_test_checkerboard(void)`
-* `unsigned char ram_test_march_c(void)`
-
-Each function takes no arguments, and returns a fixed value of zero. The return value can be passed through and returned as-is from `__sdcc_external_startup()` to indicate global/static variable initialisation should continue (and not be skipped; see SDCC manual for details).
-
-Should a RAM test function encounter a failure, it will reset the microcontroller by executing an invalid opcode, causing an illegal opcode reset. You can determine after the fact whether this has occurred by checking whether the `ILLOPF` bit in the `RST_SR` register is set to 1. If the failure is permanent or persistent, the microcontroller will effectively remain in a reset loop and not execute the rest of the firmware as normal.
-
 # Building
 
 Run `make` in the code's root folder. Some arguments may be required; see below.
@@ -43,13 +34,25 @@ Or, for an STM8S105 with 2 KB of RAM: `make RAM_END=0x07FF`.
 
 # Usage
 
+The test functions should be executed from within `__sdcc_external_startup()` by way of one of the following macros:
+
+* `ram_test_checkerboard()`
+* `ram_test_march_c()`
+
+The macro call *must* be the first and only statement within `__sdcc_external_startup()`. **Do not perform any other actions inside `__sdcc_external_startup()` other than calling a RAM test macro.**
+
+The macros jump directly to the test routine, without using a function call. This means that when the test function returns, it effectively does so as if directly from `__sdcc_external_startup()` itself. It avoids creating a new stack frame, and thus an extra return address on the stack that would need preserving during the test. So, be aware that the effect is that anything following the macro call is never executed. However, you may need to add a dummy `return` statement to avoid a compiler warning.
+
+It is also recommended that you place your definition of `__sdcc_external_startup()` at the top of the file containing `main()` so that it resides at an address in flash as near to 0x8000 as possible.
+
 Example usage:
 
 ```c
 #include "ram_test.h"
 
 unsigned char __sdcc_external_startup(void) {
-	return ram_test_march_c();
+	ram_test_march_c();
+	return 0;
 }
 
 void main(void) {
@@ -61,21 +64,13 @@ void main(void) {
 
 When compiling your code, link the library's `.lib` file using the SDCC `-l` option.
 
-## Warning
+## Implementation Details
 
-It is advised that you do not perform any other actions inside `__sdcc_external_startup()` other than calling a RAM test function. Because the RAM test overwrites all contents of the *entire* RAM, all local variables declared inside `__sdcc_external_startup()` will have their values clobbered. However, if you do wish to do other things in `__sdcc_external_startup()`, do them *after* the RAM test, and bear in mind that any initialised variables will have lost their assigned value.
+Should a RAM test function encounter a failure, it will reset the microcontroller by executing an invalid opcode, causing an illegal opcode reset. You can determine after the fact whether this has occurred by checking whether the `ILLOPF` bit in the `RST_SR` register is set to 1. If the failure is permanent or persistent, the microcontroller will effectively remain in a reset loop and not execute the rest of the firmware as normal.
 
-```c
-unsigned char __sdcc_external_startup(void) {
-	int foo = 123; // 'foo' is stored on the stack, at top of RAM
+The test functions are able to return, even though ostensibly their return address on the stack (in RAM) is wiped out during the course of the test, because they preserve the return address in CPU registers. After testing is finished, the saved return address is pushed back onto the stack.
 
-	ram_test_checkerboard(); // stack overwritten by test
-
-	// result: 'foo' will have lost its value of 123 here!
-
-	return 0;
-}
-```
+Each RAM test function returns a fixed value of zero. The return value is effectively passed through and becomes the return value from `__sdcc_external_startup()`, to indicate global/static variable initialisation should continue and not be skipped (see SDCC manual for details).
 
 # Disclaimer
 
