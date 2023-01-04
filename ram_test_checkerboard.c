@@ -27,7 +27,7 @@
 #include "ram_test.h"
 
 // 30 bytes
-unsigned char ram_test_checkerboard(void) __naked {
+unsigned char ram_test_checkerboard_impl(void) __naked {
 	__asm
 #ifdef __SDCC_MODEL_LARGE
 		; Return address on stack is 3 bytes, but because GSINIT section (where

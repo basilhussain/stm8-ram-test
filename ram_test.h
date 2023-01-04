@@ -27,11 +27,22 @@
 #ifndef RAM_TEST_H__
 #define RAM_TEST_H__
 
-// #ifndef RAM_END
-// #error "RAM test routines need RAM_END (highest address of RAM) defined"
-// #endif
+// IMPORTANT: ALWAYS USE THESE MACROS; DO NOT DIRECTLY CALL THE FUNCTIONS
+// DECLARED BELOW.
+// The purpose of these macros is to bypass any sub-call to the test function,
+// avoiding creating a new stack frame (and thus an extra return address on the
+// stack that would need to be preserved during the test), so that when the test
+// function returns, it returns directly from __sdcc_external_startup() instead.
+#ifdef __SDCC_MODEL_LARGE
+#define ram_test_checkerboard() do { __asm__("jpf _ram_test_checkerboard_impl"); } while(0)
+#define ram_test_march_c() do { __asm__("jpf _ram_test_march_c_impl"); } while(0)
+#else
+#define ram_test_checkerboard() do { __asm__("jp _ram_test_checkerboard_impl"); } while(0)
+#define ram_test_march_c() do { __asm__("jp _ram_test_march_c_impl"); } while(0)
+#endif
 
-extern unsigned char ram_test_checkerboard(void);
-extern unsigned char ram_test_march_c(void);
+// WARNING: DO NOT CALL THESE FUNCTIONS DIRECTLY. USE THE MACROS ABOVE.
+extern unsigned char ram_test_checkerboard_impl(void);
+extern unsigned char ram_test_march_c_impl(void);
 
 #endif

@@ -28,10 +28,10 @@
 
 // Uncomment to do the more efficient 'minus' (aka 'C-') version of the March C
 // test which skips the 4th 'r0' phase.
-// #define RAM_TEST_MARCH_C_MINUS
+// #define MARCH_C_MINUS
 
 // 75 bytes
-unsigned char ram_test_march_c(void) __naked {
+unsigned char ram_test_march_c_impl(void) __naked {
 	__asm
 #ifdef __SDCC_MODEL_LARGE
 		; Return address on stack is 3 bytes. Save the MSB in A reg and the two
@@ -77,7 +77,7 @@ unsigned char ram_test_march_c(void) __naked {
 		cpw x, #RAM_END
 		jrule 0003$
 
-#ifndef RAM_TEST_MARCH_C_MINUS
+#ifndef MARCH_C_MINUS
 		ldw x, #RAM_END
 
 	0004$:
