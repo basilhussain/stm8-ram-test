@@ -13,11 +13,11 @@ Requires SDCC version 4.2.10 or greater. The `__sdcc_external_startup()` functio
 Two different test algorithms are provided:
 
 * **Checkerboard**: Fills RAM with alternating bit pattern 01010101 (0x55), then reads back and verifies the values read match the pattern. Repeats for the pattern 10101010 (0xAA).
-* **March C**: The entire RAM is alternately checked and filled byte-by-byte with background patterns (value 00000000, 0x00) and inverse background patterns (11111111, 0xFF) in seven loops. The loops are performed in either ascending or descending address order, as dictated by the stage of the algorithm. The read/write loops, and their order, are: write 0, desc.; read 0, write 1, asc.; read 1, write 0, asc.; read 0, desc.; read 0, write 1, desc.; read 1, write 0, desc.; read 0, asc. In this manner, set bits are 'marched' across the RAM area.
+* **March C**: The entire RAM is alternately checked and filled byte-by-byte with background patterns (value 00000000, 0x00) and inverse background patterns (11111111, 0xFF) in seven loops. The loops are performed in either ascending or descending address order, as dictated by the stage of the algorithm. The read/write loops, and their order, are: write 0 (desc.); read 0, write 1 (asc.); read 1, write 0 (asc.); read 0 (desc.); read 0, write 1 (desc.); read 1, write 0 (desc.); read 0 (asc.) In this manner, set bits are 'marched' across the RAM area.
 
 # Building
 
-Run `make` in the code's root folder. Some arguments may be required; see below.
+Run `make` in the code's root folder. Some arguments may be required; see below. The output `.lib` file is placed in the `lib` folder.
 
 **IMPORTANT**: The code must be compiled using options suited to the particular STM8 device you intend to run it on, in particular with regard to the size of the device's RAM, and also memory model (medium or large).
 
