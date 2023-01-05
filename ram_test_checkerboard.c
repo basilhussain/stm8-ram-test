@@ -34,7 +34,7 @@ unsigned char ram_test_checkerboard_impl(void) __naked {
 	__asm
 		; In case IWDG and WWDG are enabled at reset, re-configure them so they
 		; will not time-out during testing. Set the IWDG period to maximum (1
-		; second) and disable the WWDG.
+		; second) and refresh the WWDG counter (for period of 393 ms).
 		mov IWDG_KR, #0x55
 		mov IWDG_PR, #0x06
 		mov IWDG_KR, #0xAA
