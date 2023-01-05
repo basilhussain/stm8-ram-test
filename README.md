@@ -39,7 +39,7 @@ The test functions should be executed from within `__sdcc_external_startup()` by
 * `ram_test_checkerboard()`
 * `ram_test_march_c()`
 
-The macro call *must* be the first and only statement within `__sdcc_external_startup()`. **Do not perform any other actions inside `__sdcc_external_startup()` other than calling a RAM test macro.**
+The macro call should be the first and only statement within `__sdcc_external_startup()`. **Do not perform any other actions inside `__sdcc_external_startup()` other than calling a RAM test macro.**
 
 The macros jump directly to the test routine, without using a function call. This means that when the test function returns, it effectively does so as if directly from `__sdcc_external_startup()` itself. It avoids creating a new stack frame, and thus an extra return address on the stack that would need preserving during the test. So, be aware that the effect is that anything following the macro call is never executed. However, you may need to add a dummy `return` statement to avoid a compiler warning.
 
@@ -67,6 +67,8 @@ When compiling your code, link the library's `.lib` file using the SDCC `-l` opt
 ## Implementation Details
 
 Should a RAM test function encounter a failure, it will reset the microcontroller by executing an invalid opcode, causing an illegal opcode reset. You can determine after the fact whether this has occurred by checking whether the `ILLOPF` bit in the `RST_SR` register is set to 1. If the failure is permanent or persistent, the microcontroller will effectively remain in a reset loop and not execute the rest of the firmware as normal.
+
+In case either of the STM8's watchdogs (IWDG & WWDG) are enabled from reset by the option bytes, in order to avoid a watchdog time-out (and resultant reset), the RAM test functions re-configure the watchdogs before beginning testing. For the IWDG, the time-out period is increased to maximum (1 second); for the WWDG, it is disabled. Therefore, please be aware that when `main()` is entered, the watchdog registers will *not* have all their default values.
 
 The test functions are able to return, even though ostensibly their return address on the stack (in RAM) is wiped out during the course of the test, because they preserve the return address in CPU registers. After testing is finished, the saved return address is pushed back onto the stack.
 

@@ -30,9 +30,20 @@
 // test which skips the 4th 'r0' phase.
 // #define MARCH_C_MINUS
 
-// 75 bytes
+#define IWDG_KR 0x50E0
+#define IWDG_PR 0x50E1
+#define WWDG_CR 0x50D1
+
 unsigned char ram_test_march_c_impl(void) __naked {
 	__asm
+		; In case IWDG and WWDG are enabled at reset, re-configure them so they
+		; will not time-out during testing. Set the IWDG period to maximum (1
+		; second) and disable the WWDG.
+		mov IWDG_KR, #0x55
+		mov IWDG_PR, #0x06
+		mov IWDG_KR, #0xAA
+		mov WWDG_CR, #0x7F
+	
 #ifdef __SDCC_MODEL_LARGE
 		; Return address on stack is 3 bytes. Save the MSB in A reg and the two
 		; LSBs in Y reg.
