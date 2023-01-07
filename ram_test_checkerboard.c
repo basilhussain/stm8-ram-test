@@ -26,12 +26,19 @@
 
 #include "ram_test.h"
 
+#ifdef STM8L
+#define IWDG_KR 0x50E0
+#define IWDG_PR 0x50E1
+#define WWDG_CR 0x50D3
+#else
 #define IWDG_KR 0x50E0
 #define IWDG_PR 0x50E1
 #define WWDG_CR 0x50D1
+#endif
 
 unsigned char ram_test_checkerboard_impl(void) __naked {
 	__asm
+#ifdef WATCHDOG
 		; In case IWDG and WWDG are enabled at reset, re-configure them so they
 		; will not time-out during testing. Set the IWDG period to maximum (1
 		; second) and refresh the WWDG counter (for period of 393 ms).
@@ -39,7 +46,8 @@ unsigned char ram_test_checkerboard_impl(void) __naked {
 		mov IWDG_PR, #0x06
 		mov IWDG_KR, #0xAA
 		mov WWDG_CR, #0x7F
-	
+#endif
+
 #ifdef __SDCC_MODEL_LARGE
 		; Return address on stack is 3 bytes, but because GSINIT section (where
 		; we are called from) will always reside very near start of flash at
@@ -80,6 +88,12 @@ unsigned char ram_test_checkerboard_impl(void) __naked {
 		; back to 0x55 (bit 7 is clear), testing is finished so continue.
 		cpl a
 		jrmi 0001$
+
+#ifdef WATCHDOG
+		; Refresh the IWDG and WWDG once more.
+		mov IWDG_KR, #0xAA
+		mov WWDG_CR, #0x7F
+#endif
 
 #ifdef __SDCC_MODEL_LARGE
 		; We previously only saved the 2 LSBs of the return address, so restore

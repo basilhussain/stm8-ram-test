@@ -13,12 +13,28 @@ RAM_END ?= 0x03FF
 # of flash should typically use 'large'.
 MODEL ?= medium
 
+# Which STM8 series the target device belongs to ('stm8s', 'stm8af', 'stm8l',
+# 'stm8al'). Some register addresses differ between S/AF and L/AL.
+SERIES ?= stm8s
+
+# Whether to include code that will service the IWDG and WWDG watchdogs ('yes'
+# or 'no').
+WATCHDOG ?= no
+
 ################################################################################
 
 CC = sdcc
 CFLAGS = -mstm8 -DRAM_END=$(RAM_END)
 ifeq ($(MODEL),large)
 	CFLAGS += --model-large
+endif
+ifeq ($(SERIES),stm8l)
+	CFLAGS += -DSTM8L
+else ifeq ($(SERIES),stm8al)
+	CFLAGS += -DSTM8L
+endif
+ifeq ($(WATCHDOG),yes)
+	CFLAGS += -DWATCHDOG
 endif
 
 AR = sdar

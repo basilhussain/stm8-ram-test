@@ -30,12 +30,19 @@
 // test which skips the 4th 'r0' phase.
 // #define MARCH_C_MINUS
 
+#ifdef STM8L
+#define IWDG_KR 0x50E0
+#define IWDG_PR 0x50E1
+#define WWDG_CR 0x50D3
+#else
 #define IWDG_KR 0x50E0
 #define IWDG_PR 0x50E1
 #define WWDG_CR 0x50D1
+#endif
 
 unsigned char ram_test_march_c_impl(void) __naked {
 	__asm
+#ifdef WATCHDOG
 		; In case IWDG and WWDG are enabled at reset, re-configure them so they
 		; will not time-out during testing. Set the IWDG period to maximum (1
 		; second) and refresh the WWDG counter (for period of 393 ms).
@@ -43,6 +50,7 @@ unsigned char ram_test_march_c_impl(void) __naked {
 		mov IWDG_PR, #0x06
 		mov IWDG_KR, #0xAA
 		mov WWDG_CR, #0x7F
+#endif
 	
 #ifdef __SDCC_MODEL_LARGE
 		; Return address on stack is 3 bytes. Save the MSB in A reg and the two
@@ -130,6 +138,12 @@ unsigned char ram_test_march_c_impl(void) __naked {
 		incw x
 		cpw x, #RAM_END
 		jrule 0007$
+
+#ifdef WATCHDOG
+		; Refresh the IWDG and WWDG once more.
+		mov IWDG_KR, #0xAA
+		mov WWDG_CR, #0x7F
+#endif
 
 #ifdef __SDCC_MODEL_LARGE
 		; Restore the 3-byte return address on to the stack and return.

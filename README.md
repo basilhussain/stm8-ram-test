@@ -19,18 +19,20 @@ Two different test algorithms are provided:
 
 Run `make` in the code's root folder. Some arguments may be required; see below. The output `.lib` file is placed in the `lib` folder.
 
-**IMPORTANT**: The code must be compiled using options suited to the particular STM8 device you intend to run it on, in particular with regard to the size of the device's RAM, and also memory model (medium or large).
+**IMPORTANT**: The code must be compiled using options suited to the particular STM8 device you intend to run it on, in particular with regard to its series (S/AF/L/AL), size of its RAM, the memory model in use (medium/large), and whether watchdogs are enabled.
 
-By default, without specifying any options to `make`, the library compiles for an STM8S003 (or similar) having 1 KB of RAM and using the medium memory model.
+By default, without specifying any options to `make`, the library compiles for an STM8S having 1 KB of RAM and using the medium memory model.
 
 To compile for other devices, give one or more of the following options as arguments to `make`:
 
+* `SERIES=<stm8s|stm8af|stm8l|stm8al>`: The STM8 series the device belongs to.
 * `RAM_END=0xXXXX`: Specifies the end address, in hex format, of the device's RAM. See your target device's memory map in the relevant datasheet.
 * `MODEL=large`: Compiles with SDCC's `--model-large` argument. If *your* code is compiled with `--model-large`, then you need to use this option. You will probably be using this option if your device has more than 32 KB of flash.
+* `WATCHDOG=yes`: Includes code to configure and refresh the watchdogs (IWDG & WWDG) in order to avoid a time-out during testing. If you plan to enable either watchdog in the device's option bytes, you should use this option.
 
 For example, to build for an STM8S208 with 6 KB of RAM and large memory model: `make MODEL=large RAM_END=0x17FF`.
 
-Or, for an STM8S105 with 2 KB of RAM: `make RAM_END=0x07FF`.
+Or, for an STM8L151K6 with 2 KB of RAM, and including watchdog code: `make SERIES=stm8l RAM_END=0x07FF WATCHDOG=yes`.
 
 # Usage
 
@@ -68,7 +70,7 @@ When compiling your code, link the library's `.lib` file using the SDCC `-l` opt
 
 Should a RAM test function encounter a failure, it will reset the microcontroller by executing an invalid opcode, causing an illegal opcode reset. You can determine after the fact whether this has occurred by checking whether the `ILLOPF` bit in the `RST_SR` register is set to 1. If the failure is permanent or persistent, the microcontroller will effectively remain in a reset loop and not execute the rest of the firmware as normal.
 
-In case either of the STM8's watchdogs (IWDG & WWDG) are enabled from reset by the option bytes, in order to avoid a watchdog time-out (and resultant reset), the RAM test functions re-configure the watchdogs before beginning testing. For the IWDG, the time-out period is increased to maximum (1 second); for the WWDG, it is refreshed (giving period of 393 ms). Therefore, please be aware that when `main()` is entered, the watchdog registers will *not* have all their default values.
+When activated by the relevant build option, for cases where either of the STM8's watchdogs (IWDG & WWDG) will be enabled from reset by the option bytes, additional code is executed to avoid a watchdog time-out (and resultant reset) during RAM testing. The test functions will re-configure and refresh the watchdogs before beginning testing, and also refresh them again after testing. For the IWDG the re-configuration sets the time-out period to maximum (1 second). Therefore, please be aware that when `main()` is entered, the watchdog registers will *not* have all their default values.
 
 The test functions are able to return, even though ostensibly their return address on the stack (in RAM) is wiped out during the course of the test, because they preserve the return address in CPU registers. After testing is finished, the saved return address is pushed back onto the stack.
 
