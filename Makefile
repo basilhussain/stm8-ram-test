@@ -75,14 +75,8 @@ $(LIBRARY): $(OBJLIB) $(LIBDIR)
 $(OBJDIR)/%.rel: %.c $(SRCHEAD) $(OBJDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-$(OBJDIR):
-	$(MKDIR) $(OBJDIR)
-
-$(LIBDIR):
-	$(MKDIR) $(LIBDIR)
-
-$(BINDIR):
-	$(MKDIR) $(BINDIR)
+$(OBJDIR) $(LIBDIR) $(BINDIR):
+	$(MKDIR) $@
 
 clean:
 	$(RM) $(OBJDIR)
@@ -90,4 +84,4 @@ clean:
 	$(RM) $(BINDIR)
 
 sim:
-	ucsim_stm8 -t STM8S208 -X 16M -I if=rom[0x5800] $(BINARY)
+	ucsim_stm8 -t STM8S208 -X 2M $(BINARY)
