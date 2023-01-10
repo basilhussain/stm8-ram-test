@@ -88,9 +88,11 @@ unsigned char ram_test_march_c_impl(void) __naked {
 
 	0003$:
 		; Read ones, write zeroes, ascending order.
-		; The verifying and write are accomplished in a single step by inverting
-		; the existing ones value - if the result is not zero, we fail.
+		; The write is accomplished by inverting the existing ones value. A
+		; separate test is then made to verify the actual result written (versus
+		; relying on Z flag from the complement). If it is not zero, we fail.
 		cpl (x)
+		tnz (x)
 		jrne 9999$
 		incw x
 		cpw x, #RAM_END
@@ -122,9 +124,11 @@ unsigned char ram_test_march_c_impl(void) __naked {
 
 	0006$:
 		; Read ones, write zeroes, descending order.
-		; The verifying and write are accomplished in a single step by inverting
-		; the existing ones value - if the result is not zero, we fail.
+		; The write is accomplished by inverting the existing ones value. A
+		; separate test is then made to verify the actual result written (versus
+		; relying on Z flag from the complement). If it is not zero, we fail.
 		cpl (x)
+		tnz (x)
 		jrne 9999$
 		decw x
 		jrpl 0006$
