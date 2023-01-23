@@ -101,12 +101,12 @@ unsigned char ram_test_checkerboard_impl(void) __naked {
 		; the MSB to a fixed value of zero, then do a far return.
 		pushw y
 		push #0x00
-		ld a, #0
+		clr a
 		retf
 #else
 		; Put the return address back on to the stack and return.
 		pushw y
-		ld a, #0
+		clr a
 		ret
 #endif
 

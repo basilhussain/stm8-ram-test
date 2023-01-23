@@ -154,12 +154,12 @@ unsigned char ram_test_march_c_impl(void) __naked {
 		; Restore the 3-byte return address on to the stack and return.
 		pushw y
 		push a
-		ld a, #0
+		clr a
 		retf
 #else
 		; Put the 16-bit return address back on to the stack and return.
 		pushw y
-		ld a, #0
+		clr a
 		ret
 #endif
 
