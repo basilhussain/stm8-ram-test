@@ -66,13 +66,13 @@ BINARY = $(BINDIR)/test.ihx
 
 all: $(BINARY)
 
-$(BINARY): $(OBJTEST) $(LIBRARY) $(BINDIR)
+$(BINARY): $(OBJTEST) $(LIBRARY) | $(BINDIR)
 	$(CC) $(CFLAGS) --out-fmt-ihx -o $@ -l $(LIBRARY) $(OBJTEST)
 
-$(LIBRARY): $(OBJLIB) $(LIBDIR)
+$(LIBRARY): $(OBJLIB) | $(LIBDIR)
 	$(AR) $(AFLAGS) -r $@ $(OBJLIB)
 
-$(OBJDIR)/%.rel: %.c $(SRCHEAD) $(OBJDIR)
+$(OBJDIR)/%.rel: %.c $(SRCHEAD) | $(OBJDIR)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(OBJDIR) $(LIBDIR) $(BINDIR):
